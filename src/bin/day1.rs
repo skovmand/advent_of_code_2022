@@ -42,21 +42,21 @@ fn calorie_sum_of_3_elves_with_most_cals(input: &str) -> u64 {
 }
 
 fn parse_input(input: &str) -> ElvesWithCalorieSums {
+    parse_elves_with_calorie_sums(input).expect("Failed to parse input")
+}
+
+fn parse_elves_with_calorie_sums(input: &str) -> Result<ElvesWithCalorieSums, ParseIntError> {
     input
         .trim()
         .split("\n\n")
         .map(|elf_string| elf_string.split('\n').collect())
-        .map(parse_elf_calories)
+        .map(parse_elf_with_inventory)
         .map(|elf_with_cals| elf_with_cals.map(|v| v.iter().sum::<u64>()))
-        .collect::<Result<ElvesWithCalorieSums, ParseIntError>>()
-        .expect("Failed to parse input")
+        .collect()
 }
 
-fn parse_elf_calories(input: Vec<&str>) -> Result<ElfWithInventory, ParseIntError> {
-    input
-        .iter()
-        .map(|cal| cal.parse::<u64>())
-        .collect::<Result<Vec<u64>, std::num::ParseIntError>>()
+fn parse_elf_with_inventory(input: Vec<&str>) -> Result<ElfWithInventory, ParseIntError> {
+    input.iter().map(|cal| cal.parse::<u64>()).collect()
 }
 
 #[cfg(test)]
