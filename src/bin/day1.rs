@@ -18,7 +18,7 @@ fn main() {
     print_solution(
         1,
         2,
-        "Find the Elf carrying the most Calories. How many total Calories is that Elf carrying?",
+        "Find the top three Elves carrying the most Calories. How many Calories are those Elves carrying in total?",
         format!("{}", calorie_sum_of_3_elves_with_most_cals(&input)),
     );
 }
