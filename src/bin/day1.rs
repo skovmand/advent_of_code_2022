@@ -8,13 +8,25 @@ type ElvesWithCalories = Vec<ElfWithCalories>;
 fn main() {
     let input = read_from_stdin();
     let elves_with_calories: ElvesWithCalories = parse_input(input).expect("Failed to parse input");
-    let max = elves_with_calories
+    let elves_with_calorie_sums: Vec<u64> = elves_with_calories
         .iter()
         .map(|elf| elf.iter().sum::<u64>())
+        .collect();
+
+    let max = elves_with_calorie_sums
+        .iter()
         .max()
         .expect("Could not find max");
 
     println!("D1P1 solution: {}", max);
+
+    let mut sorted_elves_with_calorie_sums = elves_with_calorie_sums;
+    sorted_elves_with_calorie_sums.sort();
+    sorted_elves_with_calorie_sums.reverse();
+
+    let sum_of_three_largest: u64 = sorted_elves_with_calorie_sums.iter().take(3).sum();
+
+    println!("D1P2 solution: {}", sum_of_three_largest);
 }
 
 fn parse_input(input: String) -> Result<ElvesWithCalories, ParseIntError> {
