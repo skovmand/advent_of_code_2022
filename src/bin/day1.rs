@@ -3,7 +3,6 @@ use std::num::ParseIntError;
 use twentytwo::{solution::print_solution, stdin::read_from_stdin};
 
 type CalorieCount = u64;
-type ElfWithInventory = Vec<CalorieCount>;
 type ElvesWithCalorieSums = Vec<CalorieCount>;
 
 fn main() {
@@ -27,6 +26,7 @@ fn main() {
 /// D1P1
 fn elf_with_most_calories(input: &str) -> u64 {
     parse_input(input)
+        .expect("Parse Elves")
         .into_iter()
         .max()
         .expect("Could not find max")
@@ -34,29 +34,19 @@ fn elf_with_most_calories(input: &str) -> u64 {
 
 /// D1P2
 fn calorie_sum_of_3_elves_with_most_cals(input: &str) -> u64 {
-    let mut elves_with_calorie_sums: Vec<u64> = parse_input(input);
+    let mut elves_with_calorie_sums: Vec<u64> = parse_input(input).expect("Parse Elves");
     elves_with_calorie_sums.sort();
     elves_with_calorie_sums.reverse();
 
     elves_with_calorie_sums.iter().take(3).sum()
 }
 
-fn parse_input(input: &str) -> ElvesWithCalorieSums {
-    parse_elves_with_calorie_sums(input).expect("Failed to parse input")
+fn parse_input(input: &str) -> Result<ElvesWithCalorieSums, ParseIntError> {
+    input.trim().split("\n\n").map(parse_elf).collect()
 }
 
-fn parse_elves_with_calorie_sums(input: &str) -> Result<ElvesWithCalorieSums, ParseIntError> {
-    input
-        .trim()
-        .split("\n\n")
-        .map(|elf_string| elf_string.split('\n').collect())
-        .map(parse_elf_with_inventory)
-        .map(|elf_with_cals| elf_with_cals.map(|v| v.iter().sum::<u64>()))
-        .collect()
-}
-
-fn parse_elf_with_inventory(input: Vec<&str>) -> Result<ElfWithInventory, ParseIntError> {
-    input.iter().map(|cal| cal.parse::<u64>()).collect()
+fn parse_elf(input: &str) -> Result<CalorieCount, ParseIntError> {
+    input.split('\n').map(|cal| cal.parse::<u64>()).sum()
 }
 
 #[cfg(test)]
