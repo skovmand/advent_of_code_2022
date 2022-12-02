@@ -1,6 +1,6 @@
 use std::num::ParseIntError;
 
-use twentytwo::{solution::print_solution, stdin::read_from_stdin};
+use twentytwo::{print_solution, read_from_stdin};
 
 type CalorieCount = u64;
 type ElvesWithCalorieSums = Vec<CalorieCount>;

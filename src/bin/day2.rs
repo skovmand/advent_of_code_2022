@@ -1,4 +1,4 @@
-use twentytwo::{solution::print_solution, stdin::read_from_stdin};
+use twentytwo::{print_solution, read_from_stdin};
 
 #[derive(Copy, Clone)]
 enum Choice {
