@@ -7,27 +7,27 @@ fn main() {
         3,
         1,
         "Find the item type that appears in both compartments of each rucksack. What is the sum of the priorities of those item types?",
-        format!("{}", priority_sum(&input)),
+        format!("{}", priority_sum_of_supplies(&input)),
     );
 }
 
-fn parse_input(input: &str) -> Vec<&[u8]> {
-    input.lines().map(parse_line).collect()
-}
-
-fn parse_line(input: &str) -> &[u8] {
-    input.as_bytes()
-}
-
 // D3P1
-fn priority_sum(input: &str) -> u64 {
-    parse_input(input)
+fn priority_sum_of_supplies(input: &str) -> u64 {
+    parse_rucksacks(input)
         .into_iter()
         .map(split_rucksack)
         .map(element_in_both_compartments)
         .map(to_priority_score)
         .map(u64::from)
         .sum()
+}
+
+fn parse_rucksacks(input: &str) -> Vec<&[u8]> {
+    input.lines().map(parse_rucksack).collect()
+}
+
+fn parse_rucksack(input: &str) -> &[u8] {
+    input.as_bytes()
 }
 
 fn split_rucksack(rucksack: &[u8]) -> (&[u8], &[u8]) {
@@ -40,6 +40,8 @@ fn element_in_both_compartments((compartment_a, compartment_b): (&[u8], &[u8])) 
         .find(|v: &&u8| compartment_b.contains(v))
         .expect("Common element")
 }
+
+// Common
 
 fn to_priority_score(element: u8) -> u8 {
     if (97..=122).contains(&element) {
@@ -68,11 +70,11 @@ CrZsJsPPZsGzwwsLwLmpwMDw"#;
 
     #[test]
     fn solves_p1_example() {
-        assert_eq!(priority_sum(EXAMPLE), 157);
+        assert_eq!(priority_sum_of_supplies(EXAMPLE), 157);
     }
 
     #[test]
     fn solves_p1() {
-        assert_eq!(priority_sum(PUZZLE_INPUT), 8088);
+        assert_eq!(priority_sum_of_supplies(PUZZLE_INPUT), 8088);
     }
 }
