@@ -48,18 +48,17 @@ fn priority_sum_of_badges(input: &str) -> u64 {
         .into_iter()
         .chunks(3)
         .into_iter()
-        .map(elf_badge_element)
+        .map(badge_element)
         .map(to_priority_score)
         .map(u64::from)
         .sum()
 }
 
-fn elf_badge_element(rucksack_chunk: Chunk<IntoIter<&[u8]>>) -> u8 {
+fn badge_element(rucksack_chunk: Chunk<IntoIter<&[u8]>>) -> u8 {
     match rucksack_chunk.collect::<Vec<&[u8]>>().as_slice() {
         [a, b, c] => *a
             .iter()
-            .filter(|elem| b.contains(elem))
-            .find(|elem| c.contains(elem))
+            .find(|elem| b.contains(elem) && c.contains(elem))
             .expect("Common badge"),
         _ => panic!("Unexpected rucksack count"),
     }
