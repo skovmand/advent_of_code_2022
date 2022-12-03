@@ -55,12 +55,12 @@ fn priority_sum_of_badges(input: &str) -> u64 {
 }
 
 fn badge_element(rucksack_chunk: Chunk<IntoIter<&[u8]>>) -> u8 {
-    match rucksack_chunk.collect::<Vec<&[u8]>>().as_slice() {
+    match rucksack_chunk.collect_vec().as_slice() {
         [a, b, c] => *a
             .iter()
             .find(|elem| b.contains(elem) && c.contains(elem))
             .expect("Common badge"),
-        _ => panic!("Unexpected rucksack count"),
+        _ => panic!("Expected 3 rucksacks"),
     }
 }
 
