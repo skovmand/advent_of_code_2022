@@ -35,14 +35,10 @@ fn split_rucksack(rucksack: &[u8]) -> (&[u8], &[u8]) {
 }
 
 fn element_in_both_compartments((compartment_a, compartment_b): (&[u8], &[u8])) -> u8 {
-    compartment_a
+    *compartment_a
         .iter()
-        .copied()
-        .filter(|v| compartment_b.contains(v))
-        .collect::<Vec<u8>>()
-        .first()
+        .find(|v: &&u8| compartment_b.contains(v))
         .expect("Common element")
-        .to_owned()
 }
 
 fn to_priority_score(element: u8) -> u8 {
