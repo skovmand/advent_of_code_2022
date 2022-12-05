@@ -1,10 +1,11 @@
 #[macro_use]
 extern crate lazy_static;
 
-use std::collections::HashMap;
-
 use regex::Regex;
+use std::collections::HashMap;
 use twentytwo::{print_solution, read_from_stdin, util::regex_capture_to_u8};
+
+type Stacks = HashMap<u8, Vec<char>>;
 
 #[derive(PartialEq)]
 enum Crane {
@@ -55,14 +56,15 @@ fn main() {
     );
 }
 
+// D5P1 + D5P2
 fn which_crate_on_top_of_each_stack(input: &str, crane_model: Crane) -> String {
     let (stacks, instructions) = parse_input(input);
 
-    let final_stacks = instructions.iter().fold(stacks, |mut acc, ins| {
-        let source_stack = acc.get(&ins.from_stack).unwrap().clone();
+    let final_stack_state = instructions.iter().fold(stacks, |mut acc, ins| {
+        let source_stack = acc.get(&ins.from_stack).unwrap();
         let (lifted, new_source_stack) = source_stack.split_at(ins.amount as usize);
-        let new_source_stack = new_source_stack.to_vec();
 
+        // Put the lifted crates at the top of the new destination stack
         let mut new_destination_stack = lifted.to_vec();
 
         // Only reverse the lifted crates in part 1
@@ -70,24 +72,23 @@ fn which_crate_on_top_of_each_stack(input: &str, crane_model: Crane) -> String {
             new_destination_stack.reverse();
         }
 
-        let mut dest_stack = acc.get(&ins.to_stack).unwrap().clone();
-        new_destination_stack.append(&mut dest_stack);
+        // Move all crates from the old destination to the new one
+        let mut destination_stack = acc.get(&ins.to_stack).unwrap().clone();
+        new_destination_stack.append(&mut destination_stack);
 
-        acc.insert(ins.from_stack, new_source_stack);
+        acc.insert(ins.from_stack, new_source_stack.to_vec());
         acc.insert(ins.to_stack, new_destination_stack);
         acc
     });
 
-    let mut as_vec = final_stacks.iter().collect::<Vec<(&u8, &Vec<char>)>>();
-    as_vec.sort_by(|(i1, _), (i2, _)| i1.cmp(i2));
+    let mut final_stacks = final_stack_state.iter().collect::<Vec<(&u8, &Vec<char>)>>();
+    final_stacks.sort_by(|(i1, _), (i2, _)| i1.cmp(i2));
 
-    as_vec
+    final_stacks
         .iter()
         .map(|(_, stack)| stack.first().unwrap())
         .collect()
 }
-
-type Stacks = HashMap<u8, Vec<char>>;
 
 fn parse_input(input: &str) -> (Stacks, Vec<Instruction>) {
     let split_input = input.split("\n\n").collect::<Vec<&str>>();
