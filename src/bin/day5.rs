@@ -60,17 +60,17 @@ fn which_crate_on_top_of_each_stack(input: &str, crane_model: Crane) -> String {
 
     let final_stacks = instructions.iter().fold(stacks, |mut acc, ins| {
         let source_stack = acc.get(&ins.from_stack).unwrap().clone();
-        let mut dest_stack = acc.get(&ins.to_stack).unwrap().clone();
-
         let (lifted, new_source_stack) = source_stack.split_at(ins.amount as usize);
         let new_source_stack = new_source_stack.to_vec();
 
         let mut new_destination_stack = lifted.to_vec();
 
+        // Only reverse the lifted crates in part 1
         if crane_model == Crane::CrateMover9000 {
             new_destination_stack.reverse();
         }
 
+        let mut dest_stack = acc.get(&ins.to_stack).unwrap().clone();
         new_destination_stack.append(&mut dest_stack);
 
         acc.insert(ins.from_stack, new_source_stack);
@@ -92,6 +92,8 @@ type Stacks = HashMap<u8, Vec<char>>;
 fn parse_input(input: &str) -> (Stacks, Vec<Instruction>) {
     let split_input = input.split("\n\n").collect::<Vec<&str>>();
 
+    let stacks = parse_stacks(split_input.first().expect("Read stacks"));
+
     let instructions = split_input
         .get(1)
         .expect("Read instructions")
@@ -100,13 +102,27 @@ fn parse_input(input: &str) -> (Stacks, Vec<Instruction>) {
         .collect::<Result<Vec<Instruction>, ()>>()
         .expect("Parse instructions");
 
-    (parse_stacks(&split_input), instructions)
+    (stacks, instructions)
 }
 
-fn parse_stacks(stack_input: &[&str]) -> HashMap<u8, Vec<char>> {
-    let character_map: HashMap<(usize, usize), char> = stack_input
-        .first()
-        .expect("Read stacks")
+fn parse_stacks(stack_input: &str) -> HashMap<u8, Vec<char>> {
+    let character_map = character_map(stack_input);
+
+    left_rotate(&character_map)
+        .iter()
+        .filter(|s| !(s.contains('[') || s.contains(']') || s.trim().is_empty()))
+        .map(|s| s.trim().chars().rev().collect::<String>())
+        .map(|s| {
+            (
+                s[0..1].parse::<u8>().unwrap(),
+                s[1..].chars().rev().collect::<Vec<char>>(),
+            )
+        })
+        .collect()
+}
+
+fn character_map(stack_input: &str) -> HashMap<(usize, usize), char> {
+    stack_input
         .lines()
         .enumerate()
         .flat_map(|(y, line)| {
@@ -114,43 +130,24 @@ fn parse_stacks(stack_input: &[&str]) -> HashMap<u8, Vec<char>> {
                 .enumerate()
                 .map(move |(x, char)| ((x, y), char))
         })
-        .collect();
+        .collect()
+}
 
-    let max_x = *character_map
-        .iter()
-        .map(|((x, _), _)| x)
-        .max()
-        .expect("Max x");
+fn get_dimensions(character_map: &HashMap<(usize, usize), char>) -> (usize, usize) {
+    let max_x = character_map.iter().map(|(t, _)| t.0).max().expect("Max x");
+    let max_y = character_map.iter().map(|(t, _)| t.1).max().expect("Max y");
 
-    let max_y = *character_map
-        .iter()
-        .map(|((_, y), _)| y)
-        .max()
-        .expect("Max y");
+    (max_x, max_y)
+}
 
-    let flipped_input = (0..=max_x)
+fn left_rotate(character_map: &HashMap<(usize, usize), char>) -> Vec<String> {
+    let (max_x, max_y) = get_dimensions(character_map);
+
+    (0..=max_x)
         .map(|x| {
             (0..=max_y)
                 .map(|y| character_map.get(&(x, y)).expect("get coord"))
                 .collect::<String>()
-        })
-        .filter(|s| !(s.contains('[') || s.contains(']') || s.trim().is_empty()))
-        .map(|s| s.trim().chars().rev().collect::<String>())
-        .collect::<Vec<String>>();
-
-    flipped_input
-        .iter()
-        .map(|s| {
-            (
-                // Please make this nicer :-D
-                s.chars()
-                    .next()
-                    .expect("First char")
-                    .to_string()
-                    .parse::<u8>()
-                    .unwrap(),
-                s[1..].chars().rev().collect::<Vec<char>>(),
-            )
         })
         .collect()
 }
