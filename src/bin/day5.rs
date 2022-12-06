@@ -42,14 +42,14 @@ fn main() {
     let input = read_from_stdin();
 
     print_solution(
-        4,
+        5,
         1,
         "After the rearrangement procedure completes, what crate ends up on top of each stack?",
         which_crate_on_top_of_each_stack(&input, Crane::CrateMover9000),
     );
 
     print_solution(
-        4,
+        5,
         2,
         "After the rearrangement procedure completes, what crate ends up on top of each stack? (using CrateMover 9001)",
         which_crate_on_top_of_each_stack(&input, Crane::CrateMover9001),
