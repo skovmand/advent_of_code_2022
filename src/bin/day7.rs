@@ -63,13 +63,14 @@ fn size_of_smallest_directory_to_delete(input: &str) -> u64 {
 }
 
 fn list_of_directory_sizes(filesystem: &Filesystem) -> Vec<u64> {
-    filesystem
-        .keys()
-        .collect::<Vec<&Vec<String>>>()
+    list_of_directories(filesystem)
         .iter()
-        .map(|&key| (key, calculate_directory_size(key, filesystem)))
-        .map(|t| t.1)
+        .map(|&key| calculate_directory_size(key, filesystem))
         .collect()
+}
+
+fn list_of_directories(filesystem: &Filesystem) -> Vec<&Vec<String>> {
+    filesystem.keys().collect()
 }
 
 fn calculate_directory_size(path: &Vec<String>, filesystem: &Filesystem) -> u64 {
@@ -78,13 +79,13 @@ fn calculate_directory_size(path: &Vec<String>, filesystem: &Filesystem) -> u64 
     contents
         .iter()
         .map(|node| match node.1 {
+            NodeType::File(size) => size,
             NodeType::Directory => {
                 let mut dir_path = path.clone();
                 dir_path.push(node.0.clone());
 
                 calculate_directory_size(&dir_path, filesystem)
             }
-            NodeType::File(size) => size,
         })
         .sum()
 }
