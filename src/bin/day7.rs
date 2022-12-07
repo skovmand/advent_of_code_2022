@@ -56,11 +56,10 @@ fn size_of_smallest_directory_to_delete(input: &str) -> u64 {
     let mut directory_sizes = list_of_directory_sizes(&filesystem);
     directory_sizes.sort();
 
-    directory_sizes
+    *directory_sizes
         .iter()
         .find(|size| *size + free_space >= 30_000_000)
         .expect("find dir")
-        .to_owned()
 }
 
 fn list_of_directory_sizes(filesystem: &Filesystem) -> Vec<u64> {
@@ -73,10 +72,7 @@ fn list_of_directory_sizes(filesystem: &Filesystem) -> Vec<u64> {
         .collect()
 }
 
-fn calculate_directory_size(
-    path: &Vec<String>,
-    filesystem: &HashMap<Vec<String>, Vec<Node>>,
-) -> u64 {
+fn calculate_directory_size(path: &Vec<String>, filesystem: &Filesystem) -> u64 {
     let contents = filesystem.get(path).expect("get directory list");
 
     contents
