@@ -1,42 +1,21 @@
-mod filesystem {
-    use std::collections::HashMap;
-
-    pub type Name = String;
-    pub type Path = Vec<String>;
-    pub type Filesystem = HashMap<Path, Vec<Node>>;
-
-    #[derive(Debug, Clone)]
-    pub struct Node(pub Name, pub NodeType);
-
-    #[derive(Clone, Debug)]
-    pub enum NodeType {
-        Directory,
-        File(u64),
-    }
-}
-
-mod command {
-    #[derive(Debug)]
-    pub enum CommandType {
-        Cd(String),
-        CdParentDir,
-        Ls(Vec<LsOutput>),
-    }
-
-    #[derive(Debug)]
-    pub enum LsOutput {
-        Directory(String),
-        File(String, u64),
-    }
-}
-
 use std::collections::HashMap;
-
-use command::{
-    CommandType,
-    LsOutput::{Directory, File},
-};
 use twentytwo::{print_solution, read_from_stdin};
+
+pub type NodeName = String;
+pub type Path = Vec<String>;
+pub type Directory = Vec<Node>;
+
+// My filesystem consists of paths pointing to a directory, which is a list of nodes
+pub type Filesystem = HashMap<Path, Directory>;
+
+#[derive(Clone)]
+pub struct Node(pub NodeName, pub NodeType);
+
+#[derive(Clone)]
+pub enum NodeType {
+    Directory,
+    File(u64),
+}
 
 fn main() {
     let input = read_from_stdin();
@@ -61,13 +40,9 @@ fn sum_of_directories(input: &str) -> u64 {
     let commands = parse_commands(input).expect("parse commands");
     let filesystem = build_filesystem(commands);
 
-    filesystem
-        .keys()
-        .collect::<Vec<&Vec<String>>>()
+    list_of_directory_sizes(&filesystem)
         .iter()
-        .map(|&key| (key, calculate_directory_size(key, &filesystem)))
-        .map(|t| t.1)
-        .filter(|&size| size <= 100_000)
+        .filter(|&size| size <= &100_000)
         .sum()
 }
 
@@ -76,16 +51,9 @@ fn size_of_smallest_directory_to_delete(input: &str) -> u64 {
     let commands = parse_commands(input).expect("parse commands");
     let filesystem = build_filesystem(commands);
 
-    let mut directory_sizes = filesystem
-        .keys()
-        .collect::<Vec<&Vec<String>>>()
-        .iter()
-        .map(|&key| (key, calculate_directory_size(key, &filesystem)))
-        .map(|t| t.1)
-        .collect::<Vec<u64>>();
-
     let free_space = 70_000_000 - calculate_directory_size(&vec!["/".to_string()], &filesystem);
 
+    let mut directory_sizes = list_of_directory_sizes(&filesystem);
     directory_sizes.sort();
 
     directory_sizes
@@ -95,24 +63,49 @@ fn size_of_smallest_directory_to_delete(input: &str) -> u64 {
         .to_owned()
 }
 
+fn list_of_directory_sizes(filesystem: &Filesystem) -> Vec<u64> {
+    filesystem
+        .keys()
+        .collect::<Vec<&Vec<String>>>()
+        .iter()
+        .map(|&key| (key, calculate_directory_size(key, filesystem)))
+        .map(|t| t.1)
+        .collect()
+}
+
 fn calculate_directory_size(
     path: &Vec<String>,
-    filesystem: &HashMap<Vec<String>, Vec<filesystem::Node>>,
+    filesystem: &HashMap<Vec<String>, Vec<Node>>,
 ) -> u64 {
     let contents = filesystem.get(path).expect("get directory list");
 
     contents
         .iter()
         .map(|node| match node.1 {
-            filesystem::NodeType::Directory => {
+            NodeType::Directory => {
                 let mut dir_path = path.clone();
                 dir_path.push(node.0.clone());
 
                 calculate_directory_size(&dir_path, filesystem)
             }
-            filesystem::NodeType::File(size) => size,
+            NodeType::File(size) => size,
         })
         .sum()
+}
+
+// Parsing -------->
+
+#[derive(Debug)]
+pub enum CommandType {
+    Cd(String),
+    CdParentDir,
+    Ls(Vec<LsLine>),
+}
+
+#[derive(Debug)]
+pub enum LsLine {
+    Directory(String),
+    File(String, u64),
 }
 
 fn parse_commands(input: &str) -> Result<Vec<CommandType>, ()> {
@@ -131,7 +124,7 @@ fn chunk_to_command(chunk: &str) -> Result<CommandType, ()> {
             .lines()
             .skip(1)
             .map(parse_ls_output_line)
-            .collect::<Result<Vec<command::LsOutput>, ()>>()
+            .collect::<Result<Vec<LsLine>, ()>>()
             .expect("parse ls output");
 
         Ok(CommandType::Ls(ls_output))
@@ -144,7 +137,7 @@ fn chunk_to_command(chunk: &str) -> Result<CommandType, ()> {
     }
 }
 
-fn parse_ls_output_line(line: &str) -> Result<command::LsOutput, ()> {
+fn parse_ls_output_line(line: &str) -> Result<LsLine, ()> {
     let white_space_pos = line
         .chars()
         .enumerate()
@@ -156,19 +149,18 @@ fn parse_ls_output_line(line: &str) -> Result<command::LsOutput, ()> {
     let name = second[1..].to_string();
 
     if first == "dir" {
-        Ok(Directory(name))
+        Ok(LsLine::Directory(name))
     } else {
         let size = first.parse::<u64>().expect("parse file size");
-        Ok(File(name, size))
+        Ok(LsLine::File(name, size))
     }
 }
 
-fn build_filesystem(commands: Vec<CommandType>) -> filesystem::Filesystem {
-    let filesystem: filesystem::Filesystem = HashMap::new();
-
-    let filesystem =
-        commands.iter().fold(
-            (Vec::new(), filesystem),
+fn build_filesystem(commands: Vec<CommandType>) -> Filesystem {
+    commands
+        .iter()
+        .fold(
+            (Vec::new(), HashMap::new()),
             |(mut path, mut fs), cmd| match cmd {
                 CommandType::Cd(dir) => {
                     path.push(dir.clone());
@@ -179,15 +171,11 @@ fn build_filesystem(commands: Vec<CommandType>) -> filesystem::Filesystem {
                     (path, fs)
                 }
                 CommandType::Ls(node_list) => {
-                    let node_list: Vec<filesystem::Node> = node_list
+                    let node_list: Vec<Node> = node_list
                         .iter()
                         .map(|node| match node {
-                            Directory(name) => {
-                                filesystem::Node(name.clone(), filesystem::NodeType::Directory)
-                            }
-                            File(name, size) => {
-                                filesystem::Node(name.clone(), filesystem::NodeType::File(*size))
-                            }
+                            LsLine::Directory(name) => Node(name.clone(), NodeType::Directory),
+                            LsLine::File(name, size) => Node(name.clone(), NodeType::File(*size)),
                         })
                         .collect();
 
@@ -196,9 +184,8 @@ fn build_filesystem(commands: Vec<CommandType>) -> filesystem::Filesystem {
                     (path, fs)
                 }
             },
-        );
-
-    filesystem.1
+        )
+        .1
 }
 
 #[cfg(test)]
