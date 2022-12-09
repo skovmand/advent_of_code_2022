@@ -23,14 +23,14 @@ fn main() {
     print_solution(
         7,
         1,
-        "How many characters need to be processed before the first start-of-packet marker is detected?",
+        "Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?",
         format!("{}", sum_of_directories(&input))
     );
 
     print_solution(
         7,
         2,
-        "How many characters need to be processed before the first start-of-packet marker is detected?",
+        "Find the smallest directory that, if deleted, would free up enough space on the filesystem to run the update. What is the total size of that directory?",
         format!("{}", size_of_smallest_directory_to_delete(&input))
     );
 }
