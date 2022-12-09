@@ -82,26 +82,48 @@ impl Position {
     }
 }
 
+struct Nibble<const C: usize>([Position; C]);
+
+impl<const C: usize> Nibble<C> {
+    fn new() -> Self {
+        Nibble([Position::new(); C])
+    }
+
+    fn tail_position(&self) -> Position {
+        self.0[C - 1]
+    }
+
+    fn move_head(&mut self, direction: &Direction) {
+        self.0[0].step_in_direction(direction)
+    }
+
+    fn balance_tail(&mut self) {
+        let head_position = self.0[0];
+
+        (1..C).for_each(|i| {
+            if !(self.0[i]).touches_head_position(&head_position) {
+                self.0[i].move_diagonally(&head_position);
+            }
+        })
+    }
+}
+
 type PositionSet = HashSet<Position>;
 
 fn count_visited_positions(input: &str) -> i64 {
     let instructions = parse_input(input);
 
-    let (_, _, visited_positions): (Position, Position, PositionSet) = instructions.iter().fold(
-        (Position::new(), Position::new(), HashSet::new()),
-        |(mut head_position, mut tail_position, mut visited): (Position, Position, PositionSet),
-         instruction| {
+    let (_, visited_positions) = instructions.iter().fold(
+        (Nibble::new(), HashSet::new()),
+        |(mut nibble, mut visited): (Nibble<2>, PositionSet), instruction| {
             (0..instruction.amount).for_each(|_| {
-                head_position.step_in_direction(&instruction.direction);
-
-                if !tail_position.touches_head_position(&head_position) {
-                    tail_position.move_diagonally(&head_position);
-                }
-
-                visited.insert(tail_position);
+                // Update nibble head
+                nibble.move_head(&instruction.direction);
+                nibble.balance_tail();
+                visited.insert(nibble.tail_position());
             });
 
-            (head_position, tail_position, visited)
+            (nibble, visited)
         },
     );
 
