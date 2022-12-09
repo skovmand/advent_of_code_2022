@@ -134,21 +134,17 @@ fn solve_for_nibble_size_10(input: &str) -> usize {
 
 fn count_visited_positions<const C: usize>(
     instructions: Vec<Instruction>,
-    nibble: Nibble<C>,
+    mut nibble: Nibble<C>,
 ) -> usize {
-    let (_, visited_positions) = instructions.iter().fold(
-        (nibble, HashSet::new()),
-        |(mut nibble, mut visited), instruction| {
-            (0..instruction.amount).for_each(|_| {
-                // Update nibble head
-                nibble.move_head(&instruction.direction);
-                nibble.balance_tail();
-                visited.insert(nibble.tail_position());
-            });
+    let mut visited_positions: HashSet<Position> = HashSet::new();
 
-            (nibble, visited)
-        },
-    );
+    for instruction in instructions {
+        for _ in 0..instruction.amount {
+            nibble.move_head(&instruction.direction);
+            nibble.balance_tail();
+            visited_positions.insert(nibble.tail_position());
+        }
+    }
 
     visited_positions.len()
 }
