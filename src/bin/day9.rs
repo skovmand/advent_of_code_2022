@@ -11,6 +11,13 @@ fn main() {
         "Simulate your complete hypothetical series of motions. How many positions does the tail of the rope visit at least once?",
         format!("{}", solve_for_nibble_size_2(&input))
     );
+
+    print_solution(
+        9,
+        2,
+        "Simulate your complete series of motions on a larger rope with ten knots. How many positions does the tail of the rope visit at least once?",
+        format!("{}", solve_for_nibble_size_10(&input))
+    );
 }
 
 enum Direction {
@@ -43,8 +50,8 @@ impl From<&str> for Instruction {
     }
 }
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
-struct Position(i32, i64);
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
+struct Position(i32, i32);
 
 impl Position {
     fn new() -> Self {
@@ -82,6 +89,7 @@ impl Position {
     }
 }
 
+// Weeeeee, const generics! 🎉
 struct Nibble<const C: usize>([Position; C]);
 
 impl<const C: usize> Nibble<C> {
@@ -98,9 +106,9 @@ impl<const C: usize> Nibble<C> {
     }
 
     fn balance_tail(&mut self) {
-        let head_position = self.0[0];
-
         (1..C).for_each(|i| {
+            let head_position = self.0[i - 1];
+
             if !(self.0[i]).touches_head_position(&head_position) {
                 self.0[i].move_diagonally(&head_position);
             }
@@ -108,12 +116,19 @@ impl<const C: usize> Nibble<C> {
     }
 }
 
-type PositionSet = HashSet<Position>;
-
+// D9P1
 fn solve_for_nibble_size_2(input: &str) -> usize {
     let instructions = parse_input(input);
 
     let nibble: Nibble<2> = Nibble::new();
+    count_visited_positions(instructions, nibble)
+}
+
+// D9P2
+fn solve_for_nibble_size_10(input: &str) -> usize {
+    let instructions = parse_input(input);
+
+    let nibble: Nibble<10> = Nibble::new();
     count_visited_positions(instructions, nibble)
 }
 
@@ -123,7 +138,7 @@ fn count_visited_positions<const C: usize>(
 ) -> usize {
     let (_, visited_positions) = instructions.iter().fold(
         (nibble, HashSet::new()),
-        |(mut nibble, mut visited): (Nibble<C>, PositionSet), instruction| {
+        |(mut nibble, mut visited), instruction| {
             (0..instruction.amount).for_each(|_| {
                 // Update nibble head
                 nibble.move_head(&instruction.direction);
@@ -147,11 +162,11 @@ fn parse_input(input: &str) -> Vec<Instruction> {
 
 #[cfg(test)]
 mod tests {
-    use crate::solve_for_nibble_size_2;
+    use crate::{solve_for_nibble_size_10, solve_for_nibble_size_2};
 
     const PUZZLE_INPUT: &str = include_str!("../../puzzle_inputs/day9.txt");
 
-    const EXAMPLE: &str = r#"R 4
+    const EXAMPLE_1: &str = r#"R 4
 U 4
 L 3
 D 1
@@ -161,13 +176,33 @@ L 5
 R 2
 "#;
 
+    const EXAMPLE_2: &str = r#"R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20
+"#;
+
     #[test]
     fn solves_p1_example() {
-        assert_eq!(solve_for_nibble_size_2(EXAMPLE), 13);
+        assert_eq!(solve_for_nibble_size_2(EXAMPLE_1), 13);
     }
 
     #[test]
     fn solves_p1() {
         assert_eq!(solve_for_nibble_size_2(PUZZLE_INPUT), 5878);
+    }
+
+    #[test]
+    fn solves_p2_example() {
+        assert_eq!(solve_for_nibble_size_10(EXAMPLE_2), 36);
+    }
+
+    #[test]
+    fn solves_p2() {
+        assert_eq!(solve_for_nibble_size_10(PUZZLE_INPUT), 2405);
     }
 }
