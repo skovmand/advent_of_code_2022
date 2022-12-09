@@ -9,7 +9,7 @@ fn main() {
         9,
         1,
         "Simulate your complete hypothetical series of motions. How many positions does the tail of the rope visit at least once?",
-        format!("{}", count_visited_positions(&input))
+        format!("{}", solve_for_nibble_size_2(&input))
     );
 }
 
@@ -110,12 +110,20 @@ impl<const C: usize> Nibble<C> {
 
 type PositionSet = HashSet<Position>;
 
-fn count_visited_positions(input: &str) -> i64 {
+fn solve_for_nibble_size_2(input: &str) -> usize {
     let instructions = parse_input(input);
 
+    let nibble: Nibble<2> = Nibble::new();
+    count_visited_positions(instructions, nibble)
+}
+
+fn count_visited_positions<const C: usize>(
+    instructions: Vec<Instruction>,
+    nibble: Nibble<C>,
+) -> usize {
     let (_, visited_positions) = instructions.iter().fold(
-        (Nibble::new(), HashSet::new()),
-        |(mut nibble, mut visited): (Nibble<2>, PositionSet), instruction| {
+        (nibble, HashSet::new()),
+        |(mut nibble, mut visited): (Nibble<C>, PositionSet), instruction| {
             (0..instruction.amount).for_each(|_| {
                 // Update nibble head
                 nibble.move_head(&instruction.direction);
@@ -127,7 +135,7 @@ fn count_visited_positions(input: &str) -> i64 {
         },
     );
 
-    visited_positions.len() as i64
+    visited_positions.len()
 }
 
 fn parse_input(input: &str) -> Vec<Instruction> {
@@ -139,7 +147,7 @@ fn parse_input(input: &str) -> Vec<Instruction> {
 
 #[cfg(test)]
 mod tests {
-    use crate::count_visited_positions;
+    use crate::solve_for_nibble_size_2;
 
     const PUZZLE_INPUT: &str = include_str!("../../puzzle_inputs/day9.txt");
 
@@ -155,11 +163,11 @@ R 2
 
     #[test]
     fn solves_p1_example() {
-        assert_eq!(count_visited_positions(EXAMPLE), 13);
+        assert_eq!(solve_for_nibble_size_2(EXAMPLE), 13);
     }
 
     #[test]
     fn solves_p1() {
-        assert_eq!(count_visited_positions(PUZZLE_INPUT), 5878);
+        assert_eq!(solve_for_nibble_size_2(PUZZLE_INPUT), 5878);
     }
 }
