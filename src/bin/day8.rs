@@ -23,25 +23,18 @@ fn count_visible_trees(input: &str) -> usize {
 
     (0..max_y)
         .flat_map(|y| (0..max_x).map(move |x| (x, y)))
-        .filter(|(x, y)| !is_tree_hidden(&trees, *x, *y, max_x, max_y))
+        .filter(|(x, y)| is_tree_visible(&trees, *x, *y, max_x, max_y))
         .count()
 }
 
-fn is_tree_hidden(trees: &Trees, x: usize, y: usize, max_x: usize, max_y: usize) -> bool {
+fn is_tree_visible(trees: &Trees, x: usize, y: usize, max_x: usize, max_y: usize) -> bool {
     let tree_height = get_height(trees, x, y);
+    let tree_is_lower = |(x, y): (usize, usize)| get_height(trees, x, y) < tree_height;
 
-    // Coordinates to check
-    let mut from_left = (0..x).map(|x| (x, y));
-    let mut from_right = ((x + 1)..max_x).map(|x| (x, y));
-    let mut from_top = (0..y).map(|y| (x, y));
-    let mut from_bottom = (y + 1..max_y).map(|y| (x, y));
-
-    let hidden_from_left = from_left.any(|(x, y)| get_height(trees, x, y) >= tree_height);
-    let hidden_from_right = from_right.any(|(x, y)| get_height(trees, x, y) >= tree_height);
-    let hidden_from_top = from_top.any(|(x, y)| get_height(trees, x, y) >= tree_height);
-    let hidden_from_bottom = from_bottom.any(|(x, y)| get_height(trees, x, y) >= tree_height);
-
-    hidden_from_left && hidden_from_right && hidden_from_top && hidden_from_bottom
+    (0..x).map(|x| (x, y)).all(tree_is_lower)
+        || ((x + 1)..max_x).map(|x| (x, y)).all(tree_is_lower)
+        || (0..y).map(|y| (x, y)).all(tree_is_lower)
+        || (y + 1..max_y).map(|y| (x, y)).all(tree_is_lower)
 }
 
 fn max_scenic_score(input: &str) -> usize {
