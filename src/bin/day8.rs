@@ -51,34 +51,29 @@ fn max_scenic_score(input: &str) -> usize {
         .unwrap()
 }
 
+// This took me a while to get right 😅
+type IteratorsAndRanges = [(Box<dyn Iterator<Item = (usize, usize)>>, Range<usize>); 4];
+
 fn scenic_score(trees: &Trees, x: usize, y: usize, max_x: usize, max_y: usize) -> usize {
     let tree_height = get_height(trees, x, y);
+    let higher_tree = |(x, y): &(usize, usize)| get_height(trees, *x, *y) >= tree_height;
 
-    let count_west = west_iterator(x, y)
-        .enumerate()
-        .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
-        .map(|(i, _)| i + 1)
-        .unwrap_or_else(|| west_range(x).len());
+    let iter_array: IteratorsAndRanges = [
+        (Box::new(west_iterator(x, y)), west_range(x)),
+        (Box::new(east_iterator(x, y, max_x)), east_range(x, max_x)),
+        (Box::new(north_iterator(x, y)), north_range(y)),
+        (Box::new(south_iterator(x, y, max_y)), south_range(y, max_y)),
+    ];
 
-    let count_east = east_iterator(x, y, max_x)
-        .enumerate()
-        .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
-        .map(|(i, _)| i + 1)
-        .unwrap_or_else(|| east_range(x, max_x).len());
-
-    let count_north = north_iterator(x, y)
-        .enumerate()
-        .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
-        .map(|(i, _)| i + 1)
-        .unwrap_or_else(|| north_range(y).len());
-
-    let count_south = south_iterator(x, y, max_y)
-        .enumerate()
-        .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
-        .map(|(i, _)| i + 1)
-        .unwrap_or_else(|| south_range(y, max_y).len());
-
-    count_west * count_east * count_north * count_south
+    iter_array
+        .into_iter()
+        .map(|(iter, range)| {
+            iter.enumerate()
+                .find(|(_, coords)| higher_tree(coords))
+                .map(|(i, _)| i + 1)
+                .unwrap_or_else(|| range.len())
+        })
+        .product()
 }
 
 // Ranges and iterators -->
