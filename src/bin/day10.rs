@@ -1,4 +1,4 @@
-use itertools::Itertools;
+use itertools::{unfold, Itertools};
 use twentytwo::{print_solution, read_from_stdin};
 
 fn main() {
@@ -19,59 +19,30 @@ fn main() {
     );
 }
 
-enum Instruction {
-    AddX(i64),
-    NoOp,
-}
-
-impl From<&str> for Instruction {
-    fn from(value: &str) -> Self {
-        if let Some(amount) = value.strip_prefix("addx ") {
-            let amount_i32 = amount.parse::<i64>().expect("parse amount");
-            Instruction::AddX(amount_i32)
-        } else if value == "noop" {
-            Instruction::NoOp
-        } else {
-            println!("failed to parse: '{}'", value);
-            panic!("parse instructions");
-        }
-    }
-}
-
 // D10P1
 fn signal_sum(input: &str) -> i64 {
     let instructions = parse_input(input);
-    let signal_strengths = signal_strengths(&instructions);
+    let mut signal_strengths = signal_strengths(instructions);
 
-    [20, 60, 100, 140, 180, 220]
-        .into_iter()
-        .map(|i| signal_strengths[i - 1] * (i as i64))
-        .sum()
-}
-
-fn signal_strengths(instructions: &[Instruction]) -> Vec<i64> {
-    let mut x = 1;
-
-    instructions
-        .iter()
-        .flat_map(|i| match i {
-            Instruction::AddX(value) => {
-                let return_value = vec![x, x];
-                x += value;
-                return_value
-            }
-            Instruction::NoOp => vec![x],
-        })
-        .collect()
+    [
+        (20, 20),
+        (40, 60),
+        (40, 100),
+        (40, 140),
+        (40, 180),
+        (40, 220),
+    ]
+    .iter()
+    .map(|(steps, step_sum)| step_sum * signal_strengths.nth(steps - 1).expect("iter pos"))
+    .sum()
 }
 
 // D10P2
 fn render_crt(input: &str) -> String {
     let instructions = parse_input(input);
-    let signal_strengths = signal_strengths(&instructions);
+    let signal_strengths = signal_strengths(instructions);
 
     signal_strengths
-        .into_iter()
         .chunks(40)
         .into_iter()
         .map(|chunk| {
@@ -92,13 +63,48 @@ fn render_crt(input: &str) -> String {
         .collect()
 }
 
-// X controls the horizontal position of a sprite (the middle)!
-// sprite: if one of its three pixels is drawn, the screen produces a lit pixel (#) otherwise (.)
+// My first use of unfold 🎉
+// Creates an iterator of signal strengths from a list of instructions
+fn signal_strengths(instructions: Vec<Instruction>) -> impl Iterator<Item = i64> {
+    unfold((0_usize, 1), move |(i, strength)| {
+        match &instructions.get(*i) {
+            Some(Instruction::AddX(value)) => {
+                let return_value = vec![*strength, *strength];
+                *strength += value;
+                *i += 1;
 
-// 40 wide
-// 6 high -- not important, the len is 240
-// the CRT draws a single pixel during each cycle
-// CRT drawing 0, 1, 2, ...
+                Some(return_value)
+            }
+            Some(Instruction::NoOp) => {
+                *i += 1;
+                Some(vec![*strength])
+            }
+            None => None,
+        }
+    })
+    .flatten()
+}
+
+// Parsing ----->
+
+enum Instruction {
+    AddX(i64),
+    NoOp,
+}
+
+impl From<&str> for Instruction {
+    fn from(value: &str) -> Self {
+        if let Some(amount) = value.strip_prefix("addx ") {
+            let amount_i32 = amount.parse::<i64>().expect("parse amount");
+            Instruction::AddX(amount_i32)
+        } else if value == "noop" {
+            Instruction::NoOp
+        } else {
+            println!("failed to parse: '{}'", value);
+            panic!("parse instructions");
+        }
+    }
+}
 
 fn parse_input(input: &str) -> Vec<Instruction> {
     input.lines().map(Instruction::from).collect()
