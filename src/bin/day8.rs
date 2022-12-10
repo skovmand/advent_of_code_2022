@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use twentytwo::{print_solution, read_from_stdin};
 
 fn main() {
@@ -18,6 +20,7 @@ fn main() {
     );
 }
 
+// D8P1
 fn count_visible_trees(input: &str) -> usize {
     let (trees, max_x, max_y) = parse_trees(input);
 
@@ -31,12 +34,13 @@ fn is_tree_visible(trees: &Trees, x: usize, y: usize, max_x: usize, max_y: usize
     let tree_height = get_height(trees, x, y);
     let tree_is_lower = |(x, y): (usize, usize)| get_height(trees, x, y) < tree_height;
 
-    (0..x).map(|x| (x, y)).all(tree_is_lower)
-        || ((x + 1)..max_x).map(|x| (x, y)).all(tree_is_lower)
-        || (0..y).map(|y| (x, y)).all(tree_is_lower)
-        || (y + 1..max_y).map(|y| (x, y)).all(tree_is_lower)
+    west_iterator(x, y).all(tree_is_lower)
+        || east_iterator(x, y, max_x).all(tree_is_lower)
+        || north_iterator(x, y).all(tree_is_lower)
+        || south_iterator(x, y, max_y).all(tree_is_lower)
 }
 
+// D8P2
 fn max_scenic_score(input: &str) -> usize {
     let (trees, max_x, max_y) = parse_trees(input);
 
@@ -50,38 +54,68 @@ fn max_scenic_score(input: &str) -> usize {
 fn scenic_score(trees: &Trees, x: usize, y: usize, max_x: usize, max_y: usize) -> usize {
     let tree_height = get_height(trees, x, y);
 
-    // Coordinates to check
-    let west_len = (0..x).len();
-    let east_len = (x + 1..max_x).len();
-    let north_len = (0..y).len();
-    let south_len = (y + 1..max_y).len();
-
-    let mut west = (0..x).rev().map(|x| (x, y)).enumerate();
-    let mut east = ((x + 1)..max_x).map(|x| (x, y)).enumerate();
-    let mut north = (0..y).rev().map(|y| (x, y)).enumerate();
-    let mut south = (y + 1..max_y).map(|y| (x, y)).enumerate();
-
-    let count_west = west
+    let count_west = west_iterator(x, y)
+        .enumerate()
         .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
         .map(|(i, _)| i + 1)
-        .unwrap_or(west_len);
+        .unwrap_or_else(|| west_range(x).len());
 
-    let count_east = east
+    let count_east = east_iterator(x, y, max_x)
+        .enumerate()
         .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
         .map(|(i, _)| i + 1)
-        .unwrap_or(east_len);
+        .unwrap_or_else(|| east_range(x, max_x).len());
 
-    let count_north = north
+    let count_north = north_iterator(x, y)
+        .enumerate()
         .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
         .map(|(i, _)| i + 1)
-        .unwrap_or(north_len);
+        .unwrap_or_else(|| north_range(y).len());
 
-    let count_south = south
+    let count_south = south_iterator(x, y, max_y)
+        .enumerate()
         .find(|(_, (x, y))| get_height(trees, *x, *y) >= tree_height)
         .map(|(i, _)| i + 1)
-        .unwrap_or(south_len);
+        .unwrap_or_else(|| south_range(y, max_y).len());
 
     count_west * count_east * count_north * count_south
+}
+
+// Ranges and iterators -->
+fn west_range(x: usize) -> Range<usize> {
+    0..x
+}
+
+fn east_range(x: usize, max_x: usize) -> Range<usize> {
+    x + 1..max_x
+}
+
+fn north_range(y: usize) -> Range<usize> {
+    0..y
+}
+
+fn south_range(y: usize, max_y: usize) -> Range<usize> {
+    y + 1..max_y
+}
+
+// Iterator from x towards west
+fn west_iterator(x: usize, y: usize) -> impl Iterator<Item = (usize, usize)> {
+    west_range(x).rev().map(move |x| (x, y))
+}
+
+// Iterator from x towards east
+fn east_iterator(x: usize, y: usize, max_x: usize) -> impl Iterator<Item = (usize, usize)> {
+    east_range(x, max_x).map(move |x| (x, y))
+}
+
+// Iterator from x towards north
+fn north_iterator(x: usize, y: usize) -> impl Iterator<Item = (usize, usize)> {
+    north_range(y).rev().map(move |y| (x, y))
+}
+
+// Iterator from x towards north
+fn south_iterator(x: usize, y: usize, max_y: usize) -> impl Iterator<Item = (usize, usize)> {
+    south_range(y, max_y).map(move |y| (x, y))
 }
 
 fn get_height(trees: &Trees, x: usize, y: usize) -> u8 {
