@@ -18,11 +18,8 @@ where
     }
 
     pub fn enqueue(&mut self, item: T, priority: usize) {
-        if let Some((index, (stored_priority, item))) = self
-            .0
-            .iter()
-            .enumerate()
-            .find(|(_, (_, this_item))| &item == this_item)
+        if let Some((index, (stored_priority, item))) =
+            self.0.iter().enumerate().find(|(_, (_, this_item))| &item == this_item)
         {
             // The item is already in the queue, update the priority if lower
             if priority < *stored_priority {
@@ -35,12 +32,7 @@ where
     }
 
     pub fn dequeue(&mut self) -> Option<(usize, T)> {
-        if let Some((index, _)) = self
-            .0
-            .iter()
-            .enumerate()
-            .min_by_key(|(_, (priority, _))| priority)
-        {
+        if let Some((index, _)) = self.0.iter().enumerate().min_by_key(|(_, (priority, _))| priority) {
             let item = self.0[index];
             self.0.swap_remove(index);
 

@@ -8,14 +8,14 @@ fn main() {
         6,
         1,
         "How many characters need to be processed before the first start-of-packet marker is detected?",
-        format!("{}", characters_before_marker_end(&input))
+        format!("{}", characters_before_marker_end(&input)),
     );
 
     print_solution(
         6,
         2,
         "How many characters need to be processed before the first start-of-message marker is detected?",
-        format!("{}", characters_before_message_marker(&input))
+        format!("{}", characters_before_message_marker(&input)),
     );
 }
 

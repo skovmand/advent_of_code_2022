@@ -156,32 +156,29 @@ fn parse_ls_output_line(line: &str) -> Result<LsLine, ()> {
 fn build_filesystem(commands: Vec<CommandType>) -> Filesystem {
     commands
         .iter()
-        .fold(
-            (Vec::new(), HashMap::new()),
-            |(mut path, mut fs), cmd| match cmd {
-                CommandType::Cd(dir) => {
-                    path.push(dir.clone());
-                    (path, fs)
-                }
-                CommandType::CdParentDir => {
-                    path.pop();
-                    (path, fs)
-                }
-                CommandType::Ls(node_list) => {
-                    let node_list: Vec<Node> = node_list
-                        .iter()
-                        .map(|node| match node {
-                            LsLine::Directory(name) => Node(name.clone(), NodeType::Directory),
-                            LsLine::File(name, size) => Node(name.clone(), NodeType::File(*size)),
-                        })
-                        .collect();
+        .fold((Vec::new(), HashMap::new()), |(mut path, mut fs), cmd| match cmd {
+            CommandType::Cd(dir) => {
+                path.push(dir.clone());
+                (path, fs)
+            }
+            CommandType::CdParentDir => {
+                path.pop();
+                (path, fs)
+            }
+            CommandType::Ls(node_list) => {
+                let node_list: Vec<Node> = node_list
+                    .iter()
+                    .map(|node| match node {
+                        LsLine::Directory(name) => Node(name.clone(), NodeType::Directory),
+                        LsLine::File(name, size) => Node(name.clone(), NodeType::File(*size)),
+                    })
+                    .collect();
 
-                    fs.insert(path.clone(), node_list);
+                fs.insert(path.clone(), node_list);
 
-                    (path, fs)
-                }
-            },
-        )
+                (path, fs)
+            }
+        })
         .1
 }
 

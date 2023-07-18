@@ -132,10 +132,7 @@ fn solve_for_nibble_size_10(input: &str) -> usize {
     count_visited_positions(instructions, nibble)
 }
 
-fn count_visited_positions<const C: usize>(
-    instructions: Vec<Instruction>,
-    mut nibble: Nibble<C>,
-) -> usize {
+fn count_visited_positions<const C: usize>(instructions: Vec<Instruction>, mut nibble: Nibble<C>) -> usize {
     let mut visited_positions: HashSet<Position> = HashSet::new();
 
     for instruction in instructions {
@@ -150,10 +147,7 @@ fn count_visited_positions<const C: usize>(
 }
 
 fn parse_input(input: &str) -> Vec<Instruction> {
-    input
-        .lines()
-        .map(Instruction::from)
-        .collect::<Vec<Instruction>>()
+    input.lines().map(Instruction::from).collect::<Vec<Instruction>>()
 }
 
 #[cfg(test)]

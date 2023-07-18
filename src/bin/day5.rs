@@ -84,10 +84,7 @@ fn which_crate_on_top_of_each_stack(input: &str, crane_model: Crane) -> String {
     let mut final_stacks = final_stack_state.iter().collect::<Vec<(&u8, &Vec<char>)>>();
     final_stacks.sort_by(|(i1, _), (i2, _)| i1.cmp(i2));
 
-    final_stacks
-        .iter()
-        .map(|(_, stack)| stack.first().unwrap())
-        .collect()
+    final_stacks.iter().map(|(_, stack)| stack.first().unwrap()).collect()
 }
 
 fn parse_input(input: &str) -> (Stacks, Vec<Instruction>) {
@@ -126,11 +123,7 @@ fn character_map(stack_input: &str) -> HashMap<(usize, usize), char> {
     stack_input
         .lines()
         .enumerate()
-        .flat_map(|(y, line)| {
-            line.chars()
-                .enumerate()
-                .map(move |(x, char)| ((x, y), char))
-        })
+        .flat_map(|(y, line)| line.chars().enumerate().map(move |(x, char)| ((x, y), char)))
         .collect()
 }
 
@@ -172,10 +165,7 @@ move 1 from 1 to 2
 
     #[test]
     fn solves_p1_example() {
-        assert_eq!(
-            which_crate_on_top_of_each_stack(EXAMPLE, Crane::CrateMover9000),
-            "CMZ"
-        );
+        assert_eq!(which_crate_on_top_of_each_stack(EXAMPLE, Crane::CrateMover9000), "CMZ");
     }
 
     #[test]
@@ -188,10 +178,7 @@ move 1 from 1 to 2
 
     #[test]
     fn solves_p2_example() {
-        assert_eq!(
-            which_crate_on_top_of_each_stack(EXAMPLE, Crane::CrateMover9001),
-            "MCD"
-        );
+        assert_eq!(which_crate_on_top_of_each_stack(EXAMPLE, Crane::CrateMover9001), "MCD");
     }
 
     #[test]

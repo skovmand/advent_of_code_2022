@@ -12,7 +12,7 @@ fn main() {
         11,
         1,
         "What is the level of monkey business after 20 rounds of stuff-slinging simian shenanigans?",
-        format!("{}", calculate_monkey_business(&input, 20, ReduceMode::DivideByThree))
+        format!("{}", calculate_monkey_business(&input, 20, ReduceMode::DivideByThree)),
     );
 
     print_solution(

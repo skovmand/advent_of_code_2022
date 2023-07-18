@@ -24,17 +24,10 @@ fn signal_sum(input: &str) -> i64 {
     let instructions = parse_input(input);
     let mut signal_strengths = signal_strengths(instructions);
 
-    [
-        (20, 20),
-        (40, 60),
-        (40, 100),
-        (40, 140),
-        (40, 180),
-        (40, 220),
-    ]
-    .iter()
-    .map(|(steps, step_sum)| step_sum * signal_strengths.nth(steps - 1).expect("iter pos"))
-    .sum()
+    [(20, 20), (40, 60), (40, 100), (40, 140), (40, 180), (40, 220)]
+        .iter()
+        .map(|(steps, step_sum)| step_sum * signal_strengths.nth(steps - 1).expect("iter pos"))
+        .sum()
 }
 
 // D10P2
@@ -66,21 +59,19 @@ fn render_crt(input: &str) -> String {
 // My first use of unfold 🎉
 // Creates an iterator of signal strengths from a list of instructions
 fn signal_strengths(instructions: Vec<Instruction>) -> impl Iterator<Item = i64> {
-    unfold((0_usize, 1), move |(i, strength)| {
-        match &instructions.get(*i) {
-            Some(Instruction::AddX(value)) => {
-                let return_value = vec![*strength, *strength];
-                *strength += value;
-                *i += 1;
+    unfold((0_usize, 1), move |(i, strength)| match &instructions.get(*i) {
+        Some(Instruction::AddX(value)) => {
+            let return_value = vec![*strength, *strength];
+            *strength += value;
+            *i += 1;
 
-                Some(return_value)
-            }
-            Some(Instruction::NoOp) => {
-                *i += 1;
-                Some(vec![*strength])
-            }
-            None => None,
+            Some(return_value)
         }
+        Some(Instruction::NoOp) => {
+            *i += 1;
+            Some(vec![*strength])
+        }
+        None => None,
     })
     .flatten()
 }
