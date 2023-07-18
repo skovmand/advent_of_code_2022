@@ -208,27 +208,27 @@ abdefghi";
     fn solves_d12_p1_example() {
         let grid = Grid::from(EXAMPLE);
 
-        assert_eq!(find_shortest_route_from_start_to_end(&grid).unwrap(), 31);
+        assert_eq!(find_shortest_route_from_start_to_end(&grid), Some(31));
     }
 
     #[test]
     fn solves_d12_p1() {
         let grid = Grid::from(PUZZLE_INPUT);
 
-        assert_eq!(find_shortest_route_from_start_to_end(&grid).unwrap(), 361);
+        assert_eq!(find_shortest_route_from_start_to_end(&grid), Some(361));
     }
 
     #[test]
     fn solves_d12_p2_example() {
         let grid = Grid::from(EXAMPLE);
 
-        assert_eq!(find_shortest_route_from_end_to_height_zero(grid).unwrap(), 29);
+        assert_eq!(find_shortest_route_from_end_to_height_zero(grid), Some(29));
     }
 
     #[test]
     fn solves_d12_p2() {
         let grid = Grid::from(PUZZLE_INPUT);
 
-        assert_eq!(find_shortest_route_from_end_to_height_zero(grid).unwrap(), 354);
+        assert_eq!(find_shortest_route_from_end_to_height_zero(grid), Some(354));
     }
 }
