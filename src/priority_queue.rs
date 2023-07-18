@@ -1,10 +1,5 @@
 // A Vec-backed PriorityQueue
 // Probably not the fastest in the world, but it's fun to make a home baked one
-//
-// 1) Finding the minimum priority (this could actually be cached).
-// 2) Finding an already existing item in the priority queue (without knowing the priority),
-//    and updating the priority.
-// 3) Inserting and removing items.
 
 #[derive(Debug)]
 pub struct PriorityQueue<T>(Vec<(usize, T)>);
@@ -15,6 +10,10 @@ where
 {
     pub fn new() -> Self {
         PriorityQueue(Vec::new())
+    }
+
+    pub fn with_one_element(first_element: T, priority: usize) -> Self {
+        PriorityQueue(vec![(priority, first_element)])
     }
 
     pub fn enqueue(&mut self, item: T, priority: usize) {

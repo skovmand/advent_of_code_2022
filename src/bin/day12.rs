@@ -4,6 +4,7 @@
 //! TIL: You can use ? inside of filter_map to return None. That's really convenient!
 //! TIL2: A fn in Rust is a function pointer, but it doesn't work for closures.
 
+use itertools::unfold;
 use std::collections::{HashMap, HashSet};
 use twentytwo::{print_solution, read_from_stdin, PriorityQueue};
 
@@ -15,14 +16,14 @@ fn main() {
         12,
         1,
         "What is the fewest steps required to move from your current position to the location that should get the best signal?",
-        format!("{}", find_shortest_route_from_start_to_end(&grid))
+        format!("{}", find_shortest_route_from_start_to_end(&grid).expect("Could not solve part 1"))
     );
 
     print_solution(
         12,
         2,
         "What is the fewest steps required to move starting from any square with elevation a to the location that should get the best signal?",
-        format!("{}", find_shortest_route_from_end_to_height_zero(grid))
+        format!("{}", find_shortest_route_from_end_to_height_zero(grid).expect("Could not solve part 1"))
     );
 }
 
@@ -129,7 +130,7 @@ impl Grid {
 }
 
 /// Part 1: Solve from start to end using a priority queue
-fn find_shortest_route_from_start_to_end(grid: &Grid) -> usize {
+fn find_shortest_route_from_start_to_end(grid: &Grid) -> Option<usize> {
     find_shortest_route(
         grid,
         Square::can_step_up_and_down_to_other,
@@ -139,7 +140,7 @@ fn find_shortest_route_from_start_to_end(grid: &Grid) -> usize {
 
 /// Part 2: Flip the start and end, use alternate way of finding end and height
 /// The idea is basically to find the shortest path from end to any height 0, also using the priority queue
-fn find_shortest_route_from_end_to_height_zero(mut grid: Grid) -> usize {
+fn find_shortest_route_from_end_to_height_zero(mut grid: Grid) -> Option<usize> {
     std::mem::swap(&mut grid.start, &mut grid.end);
     find_shortest_route(&grid, Square::can_step_downwards_to_other, IsRouteEndTest::HeightZero)
 }
@@ -151,44 +152,44 @@ enum IsRouteEndTest {
     HeightZero,
 }
 
+struct RoutingState {
+    finished: HashSet<Position>,
+    queue: PriorityQueue<Position>,
+}
+
 /// Find the count of fewest steps from a start position to some other position defined by route_end_test
 /// Uses the is_climbable function pointer to decide which neighbours are climbable, this varies from part 1 to 2
 fn find_shortest_route(
     grid: &Grid,
     is_climbable: fn(&Square, &Square) -> bool,
     is_route_end_test: IsRouteEndTest,
-) -> usize {
-    let mut finished_positions: HashSet<Position> = HashSet::new();
-    let mut pq: PriorityQueue<Position> = PriorityQueue::new();
-
-    pq.enqueue(grid.start, 0);
-
-    loop {
-        if let Some((priority, dequeued)) = pq.dequeue() {
-            match is_route_end_test {
-                IsRouteEndTest::StartPosition => {
-                    if dequeued == grid.end {
-                        break priority;
-                    }
-                }
-                IsRouteEndTest::HeightZero => {
-                    if *grid.grid.get(&dequeued).unwrap().as_ref() == 0 {
-                        break priority;
-                    }
-                }
-            }
+) -> Option<usize> {
+    let mut priority_queue_iter = unfold(
+        RoutingState {
+            finished: HashSet::new(),
+            queue: PriorityQueue::with_one_element(grid.start, 0),
+        },
+        |RoutingState { finished, queue }| {
+            let (priority, dequeued) = queue.dequeue()?;
 
             grid.climbable_neighbours(&dequeued, is_climbable)
                 .iter()
-                .filter(|position| !finished_positions.contains(position))
+                .filter(|position| !finished.contains(position))
                 .map(|position| (position, priority + 1))
-                .for_each(|(position, new_priority)| pq.enqueue(*position, new_priority));
+                .for_each(|(position, new_priority)| queue.enqueue(*position, new_priority));
 
-            finished_positions.insert(dequeued);
-        } else {
-            panic!("The route is not possible")
-        }
-    }
+            finished.insert(dequeued);
+
+            Some((dequeued, priority))
+        },
+    );
+
+    priority_queue_iter
+        .find(|(position, _)| match is_route_end_test {
+            IsRouteEndTest::StartPosition => *position == grid.end,
+            IsRouteEndTest::HeightZero => *grid.grid.get(position).unwrap().as_ref() == 0,
+        })
+        .map(|(_, priority)| priority)
 }
 
 #[cfg(test)]
@@ -207,27 +208,27 @@ abdefghi";
     fn solves_d12_p1_example() {
         let grid = Grid::from(EXAMPLE);
 
-        assert_eq!(find_shortest_route_from_start_to_end(&grid), 31);
+        assert_eq!(find_shortest_route_from_start_to_end(&grid).unwrap(), 31);
     }
 
     #[test]
     fn solves_d12_p1() {
         let grid = Grid::from(PUZZLE_INPUT);
 
-        assert_eq!(find_shortest_route_from_start_to_end(&grid), 361);
+        assert_eq!(find_shortest_route_from_start_to_end(&grid).unwrap(), 361);
     }
 
     #[test]
     fn solves_d12_p2_example() {
         let grid = Grid::from(EXAMPLE);
 
-        assert_eq!(find_shortest_route_from_end_to_height_zero(grid), 29);
+        assert_eq!(find_shortest_route_from_end_to_height_zero(grid).unwrap(), 29);
     }
 
     #[test]
     fn solves_d12_p2() {
         let grid = Grid::from(PUZZLE_INPUT);
 
-        assert_eq!(find_shortest_route_from_end_to_height_zero(grid), 354);
+        assert_eq!(find_shortest_route_from_end_to_height_zero(grid).unwrap(), 354);
     }
 }
