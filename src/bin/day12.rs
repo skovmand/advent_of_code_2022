@@ -1,6 +1,8 @@
 //! Day 12
-//! Took a lot of thought, and I did the PriorityQueue myself in a really simple vec-backed version.
-//! The 2nd part can definitely be more optimized by reusing already known paths.  Update: I optimized it, and it's A LOT faster now.
+//! Made a priority queue myself in a simple vec-backed version. Can be faster, but hey, I'm here for the learning.
+//! The 2nd part was tricky and led me down a big multi-hour deroute. But I got the right idea in the end which sped up the solution from 1000ms to 20ms.
+//! TIL: You can use ? inside of filter_map to return None. That's really convenient!
+//! TIL2: A fn in Rust is a function pointer, but it doesn't work for closures.
 
 use std::collections::{HashMap, HashSet};
 use twentytwo::{print_solution, read_from_stdin, PriorityQueue};
@@ -126,7 +128,7 @@ impl Grid {
     }
 }
 
-/// Part 1: Solve from start to end
+/// Part 1: Solve from start to end using a priority queue
 fn find_shortest_route_from_start_to_end(grid: &Grid) -> usize {
     find_shortest_route(
         grid,
@@ -136,20 +138,21 @@ fn find_shortest_route_from_start_to_end(grid: &Grid) -> usize {
 }
 
 /// Part 2: Flip the start and end, use alternate way of finding end and height
-/// Hope that a path is possible :-D
+/// The idea is basically to find the shortest path from end to any height 0, also using the priority queue
 fn find_shortest_route_from_end_to_height_zero(mut grid: Grid) -> usize {
     std::mem::swap(&mut grid.start, &mut grid.end);
     find_shortest_route(&grid, Square::can_step_downwards_to_other, IsRouteEndTest::HeightZero)
 }
 
-/// We have to check whether we are at the route end in two different ways
+/// We have to check whether we are at the route end in two different ways for P1 and P2
+/// Could have passed in a closure, but using this enum was quicker and more readable
 enum IsRouteEndTest {
     StartPosition,
     HeightZero,
 }
 
-/// Find the count of fewest steps from start to end in a Grid
-/// Uses the is_climbable function to decide which neighbours are climbable, this varies from part 1 to 2
+/// Find the count of fewest steps from a start position to some other position defined by route_end_test
+/// Uses the is_climbable function pointer to decide which neighbours are climbable, this varies from part 1 to 2
 fn find_shortest_route(
     grid: &Grid,
     is_climbable: fn(&Square, &Square) -> bool,
