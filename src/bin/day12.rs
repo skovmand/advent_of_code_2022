@@ -170,17 +170,17 @@ fn find_shortest_route(
             queue: PriorityQueue::with_one_element(grid.start, 0),
         },
         |RoutingState { finished, queue }| {
-            let (priority, dequeued) = queue.dequeue()?;
+            let (position, priority) = queue.dequeue()?;
 
-            grid.climbable_neighbours(&dequeued, is_climbable)
+            grid.climbable_neighbours(&position, is_climbable)
                 .iter()
                 .filter(|position| !finished.contains(position))
                 .map(|position| (position, priority + 1))
                 .for_each(|(position, new_priority)| queue.enqueue(*position, new_priority));
 
-            finished.insert(dequeued);
+            finished.insert(position);
 
-            Some((dequeued, priority))
+            Some((position, priority))
         },
     );
 

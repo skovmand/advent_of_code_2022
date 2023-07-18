@@ -2,7 +2,7 @@
 // Probably not the fastest in the world, but it's fun to make a home baked one
 
 #[derive(Debug)]
-pub struct PriorityQueue<T>(Vec<(usize, T)>);
+pub struct PriorityQueue<T>(Vec<(T, usize)>);
 
 impl<T> PriorityQueue<T>
 where
@@ -13,25 +13,25 @@ where
     }
 
     pub fn with_one_element(first_element: T, priority: usize) -> Self {
-        PriorityQueue(vec![(priority, first_element)])
+        PriorityQueue(vec![(first_element, priority)])
     }
 
     pub fn enqueue(&mut self, item: T, priority: usize) {
-        if let Some((index, (stored_priority, item))) =
-            self.0.iter().enumerate().find(|(_, (_, this_item))| &item == this_item)
+        if let Some((index, (item, stored_priority))) =
+            self.0.iter().enumerate().find(|(_, (this_item, _))| &item == this_item)
         {
             // The item is already in the queue, update the priority if lower
             if priority < *stored_priority {
-                self.0[index] = (priority, *item);
+                self.0[index] = (*item, priority);
             }
         } else {
             // The item is new, add it to the queue
-            self.0.push((priority, item))
+            self.0.push((item, priority))
         }
     }
 
-    pub fn dequeue(&mut self) -> Option<(usize, T)> {
-        if let Some((index, _)) = self.0.iter().enumerate().min_by_key(|(_, (priority, _))| priority) {
+    pub fn dequeue(&mut self) -> Option<(T, usize)> {
+        if let Some((index, _)) = self.0.iter().enumerate().min_by_key(|(_, (_, priority))| priority) {
             let item = self.0[index];
             self.0.swap_remove(index);
 
@@ -62,9 +62,9 @@ mod tests {
         pq.enqueue("Shed", 11);
         pq.enqueue("Garage", 1);
 
-        assert_eq!(pq.dequeue(), Some((1, "Garage")));
-        assert_eq!(pq.dequeue(), Some((9, "House")));
-        assert_eq!(pq.dequeue(), Some((11, "Shed")));
+        assert_eq!(pq.dequeue(), Some(("Garage", 1)));
+        assert_eq!(pq.dequeue(), Some(("House", 9)));
+        assert_eq!(pq.dequeue(), Some(("Shed", 11)));
         assert_eq!(pq.dequeue(), None);
     }
 
@@ -74,11 +74,11 @@ mod tests {
 
         pq.enqueue("House", 9);
         pq.enqueue("House", 1);
-        assert_eq!(pq.dequeue(), Some((1, "House")));
+        assert_eq!(pq.dequeue(), Some(("House", 1)));
 
         pq.enqueue("House", 2);
         pq.enqueue("House", 3);
-        assert_eq!(pq.dequeue(), Some((2, "House")));
+        assert_eq!(pq.dequeue(), Some(("House", 2)));
 
         assert_eq!(pq.dequeue(), None);
     }
