@@ -1,10 +1,10 @@
 //! Day 13: Distress Signal
 //!
 //! TIL: char has a .to_digit helper
-//! TIL2: You need to implement both PartialOrd and Ord to use .sort
-//! TIL3: I can return arrays inside of a flat_map, and it works
+//! TIL2: You need to implement both PartialOrd and Ord to use .sort()
+//! TIL3: I can return arrays inside of a flat_map, and it works 🎉
 //! TIL4: Now I know what recursive descent parsing is
-//! TIL5: Passing a mutable iterator for recursive parsing works well
+//! TIL5: Passing a mutable iterator works well for recursive parsing
 
 use std::{cmp::Ordering, iter::Peekable, str::Chars};
 
