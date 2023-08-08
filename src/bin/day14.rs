@@ -1,6 +1,8 @@
 //! Day 14: Regolith Reservoir
 //!
 //! TIL: Calling .as_slice() on a Vec enables pattern matching on its elements!
+//! TIL2: Already knew this, but nice to once again see that using iterators makes things much easier to consume
+//! TIL3: You can declare an enum inside a function. Clever if it's only used there!
 
 use std::{
     cmp::{max, min},
